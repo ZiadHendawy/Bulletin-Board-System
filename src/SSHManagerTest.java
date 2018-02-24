@@ -5,23 +5,18 @@ import org.junit.Test;
 
 public class SSHManagerTest {
 
-	@Test
-	public void test() {
-		
-		 System.out.println("sendCommand");
-
-	     /**
-	      * YOU MUST CHANGE THE FOLLOWING
-	      * FILE_NAME: A FILE IN THE DIRECTORY
-	      * USER: LOGIN USER NAME
-	      * PASSWORD: PASSWORD FOR THAT USER
-	      * HOST: IP ADDRESS OF THE SSH SERVER
-	     **/
-	     String command = "";
-	     String userName = "ziad";
-	     String password = "123456";
-	     String connectionIP = "localhost";
-	     SSHManager instance = new SSHManager(userName, password, connectionIP, "");
+//	@Test
+	public void SSHMangerSmokeTest() {
+	     assertEquals("hello from hendawy user\n", testHelper(null, "localhost", "123456"));
+	     assertEquals("hello from hendawy user\n", testHelper("hendawy", "localhost", "123456"));
+	     assertEquals("hello from ziad user\n", testHelper("ziad", "localhost", "123456"));
+	     	     
+	     
+	     
+	     
+	  }
+	public String testHelper(String userName, String connectionIP, String password){
+		SSHManager instance = new SSHManager(userName, password, connectionIP, "");
 	     String errorMessage = instance.connect();
 
 	     if(errorMessage != null)
@@ -30,21 +25,31 @@ public class SSHManagerTest {
 	        fail();
 	     }
 
-	     String expResult = "sdfkksldf\n";
-	     // call sendCommand for each command and the output 
-	     //(without prompts) is returned
-	     //String result = instance.sendCommand(command);
-	    
+	     String serverPort = "9898";
 	     String result = instance.sendCommand("pwd");
 	     result = instance.sendCommand("javac hello.java");
-	     result = instance.sendCommand("java hello");
+	    // System.out.println("before sending command");
+	    // result = instance.sendCommand("java hello "+ serverPort + " > /dev/null 2>&1 &");
+	     result = instance.sendCommand("java hello "+ serverPort + " &");
+		    
+	     System.out.println("after sending command");
+	     //result = instance.sendCommand("pwd");
 	     System.out.println(result);
 	     //result = instance.sendCommand("java Hello");
 	     //System.out.println(result);
 	     
 	     // close only after all commands are sent
 	     instance.close();
-	     assertEquals(expResult, result);
-	  }
+	     return  result;
+	     
+
+	}
+	
+	@Test
+	//before running this test change hello class in ziad to have infinite loop after printing
+	public void SSHManagerInfintLoop(){
+		
+		assertEquals("hello form ziad user\n", testHelper("ziad", "localhost", "123456"));
+	}
 
 }

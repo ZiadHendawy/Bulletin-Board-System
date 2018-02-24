@@ -1,10 +1,12 @@
- import com.jcraft.jsch.*;
+
+  import com.jcraft.jsch.*;
   import java.io.IOException;
   import java.io.InputStream;
   import java.util.logging.Level;
   import java.util.logging.Logger;
 
-  public class SSHManager{
+  public class SSHManager
+  {
   private static final Logger LOGGER = 
       Logger.getLogger(SSHManager.class.getName());
   private JSch jschSSHChannel;
@@ -67,11 +69,15 @@
 
      try
      {
-        sesConnection = jschSSHChannel.getSession(strUserName, 
-            strConnectionIP, intConnectionPort);
+    	if(strUserName != null) 
+    		sesConnection = jschSSHChannel.getSession(strUserName, 
+    				strConnectionIP, intConnectionPort);
+    	else
+    		sesConnection = jschSSHChannel.getSession(strConnectionIP);
+    		
         sesConnection.setPassword(strPassword);
         // UNCOMMENT THIS FOR TESTING PURPOSES, BUT DO NOT USE IN PRODUCTION
-         sesConnection.setConfig("StrictHostKeyChecking", "no");
+        sesConnection.setConfig("StrictHostKeyChecking", "no");
         sesConnection.connect(intTimeOut);
      }
      catch(JSchException jschX)
@@ -112,8 +118,10 @@
      {
         Channel channel = sesConnection.openChannel("exec");
         ((ChannelExec)channel).setCommand(command);
-        InputStream commandOutput = channel.getInputStream();
+        System.out.println(".setCommand");
         channel.connect();
+        /*InputStream commandOutput = channel.getInputStream();
+        
         int readByte = commandOutput.read();
 
         while(readByte != 0xffffffff)
@@ -121,25 +129,22 @@
            outputBuffer.append((char)readByte);
            readByte = commandOutput.read();
         }
-
+		*/
         channel.disconnect();
      }
-     catch(IOException ioX)
+     catch(Exception e)
      {
-        logWarning(ioX.getMessage());
+        logWarning(e.getMessage());
         return null;
      }
-     catch(JSchException jschX)
-     {
-        logWarning(jschX.getMessage());
-        return null;
-     }
+     
+
      return outputBuffer.toString();
-    }
+  }
 
-    public void close()
-    {
-       sesConnection.disconnect();
-    }
+  public void close()
+  {
+     sesConnection.disconnect();
+  }
 
-}
+  }

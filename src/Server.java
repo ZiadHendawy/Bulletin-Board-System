@@ -18,7 +18,7 @@ import java.net.Socket;
  * interpreter, Ctrl+C generally will shut it down.
  */
 public class Server {
-
+	
     /**
      * Application method to run the server runs in an infinite loop
      * listening on port 9898.  When a connection is requested, it
@@ -30,7 +30,15 @@ public class Server {
     public static void main(String[] args) throws Exception {
         System.out.println("The server is running.");
         int clientNumber = 0;
-        ServerSocket listener = new ServerSocket(9898);
+        ServerSocket listener = null;
+        try{
+        	 //9898
+        	 listener = new ServerSocket(Integer.parseInt(args[0]));
+        	 System.out.println("inside try");
+        }
+        catch(Exception e){
+        	System.out.println(e.getMessage());
+        }
         try {
             while (true) {
                 new Handler(listener.accept(), clientNumber++).start();

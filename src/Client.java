@@ -15,17 +15,18 @@ public class Client {
 
     private BufferedReader in;
     private PrintWriter out;
+    private String serverAddress;
+    private String portNumber;
 
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
      * listener sends the textfield contents to the server.
      */
-    public Client() {
+    public Client(String serverAddress, String portNumber) {
 
-        
-
-        
+        this.serverAddress = serverAddress;
+        this.portNumber = portNumber;
 
     }
 
@@ -39,9 +40,9 @@ public class Client {
     public void connectToServer() throws IOException {
 
         // Get the server address from a dialog box.
-        String serverAddress = "localhost";
+        
         // Make connection and initialize streams
-        Socket socket = new Socket(serverAddress, 9898);
+        Socket socket = new Socket(serverAddress, Integer.parseInt(portNumber));
         in = new BufferedReader(
                 new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
@@ -70,7 +71,12 @@ public class Client {
      * Runs the client application.
      */
     public static void main(String[] args) throws Exception {
-        Client client = new Client();
-        client.connectToServer();
-    }
+        try{
+        	Client client = new Client(args[0], args[1]);
+        	client.connectToServer();
+        }
+        catch(Exception e){
+        	e.printStackTrace();
+        }
+        }
 }

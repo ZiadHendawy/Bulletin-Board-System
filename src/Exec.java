@@ -62,6 +62,7 @@ public class Exec{
       channel.connect();
 
       byte[] tmp=new byte[1024];
+      
       while(true){
         while(in.available()>0){
           int i=in.read(tmp, 0, 1024);
