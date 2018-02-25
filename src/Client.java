@@ -17,26 +17,36 @@ public class Client {
     private PrintWriter out;
     private String serverAddress;
     private String portNumber;
-
+    private String type;
+    private String id;
+    private int accesses;
     /**
      * Constructs the client by laying out the GUI and registering a
      * listener with the textfield so that pressing Enter in the
      * listener sends the textfield contents to the server.
      */
-    public Client(String serverAddress, String portNumber) {
-
-        this.serverAddress = serverAddress;
+    public Client(String serverAddress, String portNumber, String type,String id, int accesses){
+    	System.out.println(serverAddress);
+    	this.serverAddress = serverAddress;
+        System.out.println(portNumber);
         this.portNumber = portNumber;
-
+        this.type = type;
+        this.id = id;
+        this.accesses = accesses;
     }
 
-    /**
+    
+
+	/**
      * Implements the connection logic by prompting the end user for
      * the server's IP address, connecting, setting up streams, and
      * consuming the welcome messages from the server.  The Capitalizer
      * protocol says that the server sends three lines of text to the
      * client immediately after establishing a connection.
      */
+    public void setAccesses(int accesses){
+    	this.accesses = accesses;
+    }
     public void connectToServer() throws IOException {
 
         // Get the server address from a dialog box.
@@ -47,36 +57,34 @@ public class Client {
                 new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-		out.println("Client alive");
-        String response;
+		if(type.equals("read"))
+        	out.println(type+" "+id+" ");
+		else
+			out.println(type+" "+id+" "+1);
+		String response;
         try {
           response = in.readLine();
-          if (response == null || response.equals("")) {
-                System.exit(0);
-            }
-        } 
-        catch (IOException ex) {
+         } catch (IOException ex) {
              response = "Error: " + ex;
         }
         
         
-        // Consume the initial welcoming messages from the server
-        for (int i = 0; i < 3; i++) {
-	    //System.out.println(in.readLine());
-        	in.readLine();
-        }
+        
     }
 
     /**
      * Runs the client application.
      */
+    
     public static void main(String[] args) throws Exception {
         try{
-        	Client client = new Client(args[0], args[1]);
+        	Client client = new Client(args[0], args[1], args[2], args[3], Integer.parseInt(args[4]));
         	client.connectToServer();
         }
         catch(Exception e){
         	e.printStackTrace();
         }
-        }
+    }
+    
+    
 }

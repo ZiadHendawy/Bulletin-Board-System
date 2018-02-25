@@ -28,17 +28,8 @@ public class SSHManagerTest {
 	     String serverPort = "9898";
 	     String result = instance.sendCommand("pwd");
 	     result = instance.sendCommand("javac hello.java");
-	    // System.out.println("before sending command");
-	    // result = instance.sendCommand("java hello "+ serverPort + " > /dev/null 2>&1 &");
-	     result = instance.sendCommand("java hello "+ serverPort + " &");
-		    
-	     System.out.println("after sending command");
-	     //result = instance.sendCommand("pwd");
-	     System.out.println(result);
-	     //result = instance.sendCommand("java Hello");
-	     //System.out.println(result);
-	     
-	     // close only after all commands are sent
+	     result = instance.sendCommand("java hello "+ serverPort + " > /dev/null 2>&1 &");
+	     //result = instance.sendCommand("java hello "+ serverPort);
 	     instance.close();
 	     return  result;
 	     

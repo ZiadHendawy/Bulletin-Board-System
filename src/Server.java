@@ -1,5 +1,7 @@
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -27,21 +29,35 @@ public class Server {
      * client that connects just to show interesting logging
      * messages.  It is certainly not necessary to do this.
      */
+    private static String val;
+    private static int seq = 0;
+	private static boolean used = false;
+	private static int rNum = 0;
     public static void main(String[] args) throws Exception {
         System.out.println("The server is running.");
         int clientNumber = 0;
+        
         ServerSocket listener = null;
+        val = "-1";
+        //write headers of files
+        log("readers.txt", "sSeq oVal rID rNum\n", false);
+        log("writers.txt", "sSeq oVal wID\n", false);
         try{
         	 //9898
         	 listener = new ServerSocket(Integer.parseInt(args[0]));
-        	 System.out.println("inside try");
+        	
+        	
         }
         catch(Exception e){
         	System.out.println(e.getMessage());
         }
         try {
-            while (true) {
-                new Handler(listener.accept(), clientNumber++).start();
+        	
+         	while (true) {
+            	Socket socket = listener.accept();
+            	//
+            	
+                new Handler(socket, clientNumber++).start();
             }
         } finally {
             listener.close();
@@ -53,14 +69,39 @@ public class Server {
      * socket.  The client terminates the dialogue by sending a single line
      * containing only a period.
      */
+    private static void log(String fileName, String text, boolean append) {
+		BufferedWriter readWriter = null;
+		BufferedWriter writeWriter = null;
+			
+		try {
+			if(readWriter == null && fileName.equals("readers.txt"))
+				readWriter = new BufferedWriter(new FileWriter(fileName, append));
+			if(writeWriter == null && fileName.equals("writers.txt"))
+				writeWriter = new BufferedWriter(new FileWriter(fileName, append));
+			
+			if(fileName.equals("writers.txt")){
+				writeWriter.write(text);
+				writeWriter.close();
+			}
+			else if(fileName.equals("readers.txt")){
+				readWriter.write(text);
+				readWriter.close();
+				
+			}
+					
+		} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		}
+    }
     private static class Handler extends Thread {
         private Socket socket;
         private int clientNumber;
-
+        
         public Handler(Socket socket, int clientNumber) {
             this.socket = socket;
             this.clientNumber = clientNumber;
-            log("New connection with client# " + clientNumber + " at " + socket);
+            System.out.println("New connection with client# " + clientNumber + " at " + socket);
         }
 
         /**
@@ -70,36 +111,59 @@ public class Server {
          */
         public void run() {
             try {
-
+            	
                 // Decorate the streams so we can send characters
                 // and not just bytes.  Ensure output is flushed
                 // after every newline.
-                BufferedReader in = new BufferedReader(
+                
+            	BufferedReader in = new BufferedReader(
                         new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-                // Send a welcome message to the client.
-                out.println("Hello, you are client #" + clientNumber + ".");
-                out.println("Enter a line with only a period to quit\n");
-
-                // Get messages from the client, line by line; return them
-                // capitalized
-                while (true) {
-                    String input = in.readLine();
-                    if (input == null || input.equals(".")) {
-                        break;
-                    }
-                    out.println(input.toUpperCase());
+                
+                String input = in.readLine();
+                String [] arr = input.split("\\s+");
+                if(arr[0].equals("read")){
+                	//write in reader log file
+                	try{
+                		rNum++;
+                		log("readers.txt", " "+seq+"   "+val+"   "+arr[1]+"   "+rNum+"\n", true);
+                	}catch(Exception e){
+                		System.out.println("invalid write request");
+                	}	
+                	
                 }
+                else if(arr[0].equals("write")){
+                	//write in writer log file
+                	
+                	try{
+                		log("writers.txt", " "+seq+"   "+arr[1]+"   "+arr[1]+"\n", true);
+                		
+                		while(used);
+                		used = true;
+                		val = arr[2];
+                		used = false;
+                	}catch(Exception e){
+                		System.out.println("invalid write request");
+                	}		
+                }
+                while(used); 	
+                used = true;
+                seq++;
+                used = false;
+                out.println(val);
+                
+                	
             } catch (IOException e) {
-                log("Error handling client# " + clientNumber + ": " + e);
+                System.out.println(e.getMessage());
             } finally {
                 try {
+                	used = false;
                     socket.close();
                 } catch (IOException e) {
-                    log("Couldn't close a socket, what's going on?");
+                    System.out.println("Couldn't close a socket, what's going on?");
                 }
-                log("Connection with client# " + clientNumber + " closed");
+                System.out.println("Connection with client# " + clientNumber + " closed");
             }
         }
 
@@ -107,8 +171,16 @@ public class Server {
          * Logs a simple message.  In this case we just write the
          * message to the server applications standard output.
          */
-        private void log(String message) {
-            System.out.println(message);
+        
+        
+        private boolean isReader(){
+        	return true;
         }
+        
+        private boolean isWriter(){
+        	return true;
+        }
+        
+        
     }
 }

@@ -120,7 +120,7 @@
         ((ChannelExec)channel).setCommand(command);
         System.out.println(".setCommand");
         channel.connect();
-        /*InputStream commandOutput = channel.getInputStream();
+        InputStream commandOutput = channel.getInputStream();
         
         int readByte = commandOutput.read();
 
@@ -129,7 +129,7 @@
            outputBuffer.append((char)readByte);
            readByte = commandOutput.read();
         }
-		*/
+		
         channel.disconnect();
      }
      catch(Exception e)
