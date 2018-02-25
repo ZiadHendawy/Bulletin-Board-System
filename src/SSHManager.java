@@ -54,14 +54,6 @@
      intTimeOut = 60000;
   }
 
-  public SSHManager(String userName, String password, String connectionIP, 
-      String knownHostsFileName, int connectionPort, int timeOutMilliseconds)
-  {
-     doCommonConstructorActions(userName, password, connectionIP, 
-         knownHostsFileName);
-     intConnectionPort = connectionPort;
-     intTimeOut = timeOutMilliseconds;
-  }
 
   public String connect()
   {

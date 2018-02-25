@@ -8,31 +8,14 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * A server program which accepts requests from clients to
- * capitalize strings.  When clients connect, a new thread is
- * started to handle an interactive dialog in which the client
- * sends in a string and the server thread sends back the
- * capitalized version of the string.
- *
- * The program is runs in an infinite loop, so shutdown in platform
- * dependent.  If you ran it from a console window with the "java"
- * interpreter, Ctrl+C generally will shut it down.
- */
 public class Server {
 	
-    /**
-     * Application method to run the server runs in an infinite loop
-     * listening on port 9898.  When a connection is requested, it
-     * spawns a new thread to do the servicing and immediately returns
-     * to listening.  The server keeps a unique client number for each
-     * client that connects just to show interesting logging
-     * messages.  It is certainly not necessary to do this.
-     */
     private static String val;
-    private static int seq = 0;
 	private static boolean used = false;
 	private static int rNum = 0;
+	private static int rSeq = 0;
+	private static int sSeq = 0;
+	
     public static void main(String[] args) throws Exception {
         System.out.println("The server is running.");
         int clientNumber = 0;
@@ -64,11 +47,6 @@ public class Server {
         }
     }
 
-    /**
-     * A private thread to handle capitalization requests on a particular
-     * socket.  The client terminates the dialogue by sending a single line
-     * containing only a period.
-     */
     private static void log(String fileName, String text, boolean append) {
 		BufferedWriter readWriter = null;
 		BufferedWriter writeWriter = null;
@@ -104,61 +82,61 @@ public class Server {
             System.out.println("New connection with client# " + clientNumber + " at " + socket);
         }
 
-        /**
-         * Services this thread's client by first sending the
-         * client a welcome message then repeatedly reading strings
-         * and sending back the capitalized version of the string.
-         */
         public void run() {
-            try {
-            	
-                // Decorate the streams so we can send characters
-                // and not just bytes.  Ensure output is flushed
-                // after every newline.
-                
-            	BufferedReader in = new BufferedReader(
+        	String [] arr = null;
+        	
+        	try {
+            	                
+                BufferedReader in = new BufferedReader(
                         new InputStreamReader(socket.getInputStream()));
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-                
                 String input = in.readLine();
-                String [] arr = input.split("\\s+");
-                if(arr[0].equals("read")){
+                
+                //ccccccccccccccccccccccccccccccccccccccc
+                rSeq++;
+                out.println(""+rSeq);
+                //wait random time 1 ---> 10,000
+                int random = (int)(Math.random() * ((10000)+1));
+        		Thread.sleep(random);
+        		
+        		arr = input.split("\\s+");
+                if(arr[0].equals("reader")){
                 	//write in reader log file
                 	try{
                 		rNum++;
-                		log("readers.txt", " "+seq+"   "+val+"   "+arr[1]+"   "+rNum+"\n", true);
+                		log("readers.txt", " "+sSeq+"   "+val+"   "+arr[1]+"   "+rNum+"\n", true);
                 	}catch(Exception e){
                 		System.out.println("invalid write request");
                 	}	
                 	
                 }
-                else if(arr[0].equals("write")){
+                else if(arr[0].equals("writer")){
                 	//write in writer log file
                 	
                 	try{
-                		log("writers.txt", " "+seq+"   "+arr[1]+"   "+arr[1]+"\n", true);
-                		
-                		while(used);
-                		used = true;
+                		//critical section
                 		val = arr[2];
-                		used = false;
+                		log("writers.txt", " "+sSeq+"   "+arr[1]+"   "+arr[1]+"\n", true);
                 	}catch(Exception e){
                 		System.out.println("invalid write request");
                 	}		
                 }
-                while(used); 	
-                used = true;
-                seq++;
-                used = false;
+                
+                //sending sSeq
+           
+                sSeq++;
+                out.println(""+sSeq);
                 out.println(val);
                 
                 	
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
             } finally {
                 try {
-                	used = false;
+                	
+                	if(arr[0].equals("reader")){
+                		rNum--;
+                	}
                     socket.close();
                 } catch (IOException e) {
                     System.out.println("Couldn't close a socket, what's going on?");
@@ -167,19 +145,7 @@ public class Server {
             }
         }
 
-        /**
-         * Logs a simple message.  In this case we just write the
-         * message to the server applications standard output.
-         */
         
-        
-        private boolean isReader(){
-        	return true;
-        }
-        
-        private boolean isWriter(){
-        	return true;
-        }
         
         
     }

@@ -1,15 +1,7 @@
-import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.jcraft.jsch.JSch;
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
-
 
 public class Start {
 
@@ -26,9 +18,6 @@ public class Start {
 		Parser parser = new Parser();
 		HashMap <String, String> map =  parser.parse(configFile);
 		start(map);
-		
-			     
-	     
 		
 		
 	}
@@ -47,16 +36,18 @@ public class Start {
 		String server = map.get("RW.server");
 		String serverPort = map.get("RW.server.port");
 		String serverPW = map.get("RW.server.pw");
-		
+		System.out.println(server);
+		System.out.println(serverPort);
+		System.out.println(serverPW);
 		//starting server
 		String result = "";
-		String [] ServerIPandUserName = split(server);
-	    SSHManager serverInstance = new SSHManager( ServerIPandUserName[1], map.get(serverPW), ServerIPandUserName [0], "");
+		String [] serverIPandUserName = split(server);
+	    SSHManager serverInstance = new SSHManager( serverIPandUserName[1], serverPW, serverIPandUserName [0], "");
 	    String serverErrorMessage = serverInstance.connect();
 	     if(serverErrorMessage != null)
 	    	 System.out.println(serverErrorMessage);
-     	result = serverInstance.sendCommand("javac Client.java");
-     	result = serverInstance.sendCommand("java Client "+" "+serverPort);
+     	result = serverInstance.sendCommand("javac Server.java");
+     	result = serverInstance.sendCommand("java Server "+" "+serverPort + " > /dev/null 2>&1 &");
      	System.out.println(result);
      	serverInstance.close();
 
@@ -75,9 +66,13 @@ public class Start {
 		
 		
 	     //starting readers
+     	System.out.println(Integer.parseInt(map.get("RW.numberOfReaders")));
 	     for(int i = 0; i < Integer.parseInt(map.get("RW.numberOfReaders")); i++){
 	    	 String [] IPandUserName = split(map.get("RW.reader"+i));
 		     String password = map.get("RW.reader"+i+".pw");
+		     System.out.println(IPandUserName[1]);
+		     System.out.println(password);
+		     System.out.println(IPandUserName[0]);
 		     SSHManager instance = new SSHManager( IPandUserName[1], password, IPandUserName [0], "");
 		     String errorMessage = instance.connect();
 	
@@ -85,7 +80,7 @@ public class Start {
 		    	 System.out.println(errorMessage);
 		     
 	     	result = instance.sendCommand("javac Client.java");
-	     	result = instance.sendCommand("java Client "+ server +" "+serverPort);
+	     	result = instance.sendCommand("java Client "+ serverIPandUserName[0] +" "+serverPort+" reader "+(i+1)+" "+map.get("RW.numberOfAccesses")+" > /dev/null 2>&1 &");
 	     	System.out.println(result);
 	     	instance.close();
 	     }	
@@ -102,7 +97,7 @@ public class Start {
 		     
 		 
 	     	result = instance.sendCommand("javac Client.java");
-	     	result = instance.sendCommand("java Client "+ server +" "+serverPort);
+	     	result = instance.sendCommand("java Client "+ serverIPandUserName[0] +" "+serverPort+" writer "+(i+1+Integer.parseInt(map.get("RW.numberOfReaders")))+" "+map.get("RW.numberOfAccesses")+" > /dev/null 2>&1 &");
 	     	System.out.println(result);
 	     	instance.close();
 	     }
@@ -112,6 +107,7 @@ public class Start {
 	
 	/**
 	 *  this function used to compile and run any java class in the same host using java runtime 
+	 *  use only if Start.java and Server.java are at the same host instead of using ssh
 	 *  @param dir file directory
 	 *  @param className name of the class 
 	 * */
@@ -143,7 +139,8 @@ public class Start {
 	public static String [] split(String address){
 		String [] IPandUserName = new String [2];
 		if(address.indexOf('@') != -1){
-			IPandUserName = address.split("@");
+			IPandUserName[1] = address.split("@")[0];
+			IPandUserName[0] = address.split("@")[1];
 		}
 		else{
 			IPandUserName[0] = address;

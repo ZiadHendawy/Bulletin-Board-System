@@ -1,16 +1,13 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 
-/**
- * A simple Swing-based client for the capitalization server.
- * It has a main frame window with a text field for entering
- * strings and a textarea to see the results of capitalizing
- * them.
- */
+
 public class Client {
 
     private BufferedReader in;
@@ -20,11 +17,7 @@ public class Client {
     private String type;
     private String id;
     private int accesses;
-    /**
-     * Constructs the client by laying out the GUI and registering a
-     * listener with the textfield so that pressing Enter in the
-     * listener sends the textfield contents to the server.
-     */
+
     public Client(String serverAddress, String portNumber, String type,String id, int accesses){
     	System.out.println(serverAddress);
     	this.serverAddress = serverAddress;
@@ -33,43 +26,87 @@ public class Client {
         this.type = type;
         this.id = id;
         this.accesses = accesses;
+        log("log"+(Integer.parseInt(id)-1)+".txt","Client: "+type+"\n"+"Client Name: "+id+"\n", false);
     }
 
     
 
-	/**
-     * Implements the connection logic by prompting the end user for
-     * the server's IP address, connecting, setting up streams, and
-     * consuming the welcome messages from the server.  The Capitalizer
-     * protocol says that the server sends three lines of text to the
-     * client immediately after establishing a connection.
-     */
-    public void setAccesses(int accesses){
-    	this.accesses = accesses;
-    }
-    public void connectToServer() throws IOException {
+
+
+    public void connectToServer() throws IOException, InterruptedException {
 
         // Get the server address from a dialog box.
         
         // Make connection and initialize streams
-        Socket socket = new Socket(serverAddress, Integer.parseInt(portNumber));
-        in = new BufferedReader(
-                new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
-
-		if(type.equals("read"))
-        	out.println(type+" "+id+" ");
-		else
-			out.println(type+" "+id+" "+1);
-		String response;
-        try {
-          response = in.readLine();
-         } catch (IOException ex) {
-             response = "Error: " + ex;
-        }
+    	Socket socket = null;
+    	boolean header = true;
+        String rSeq= "", sSeq = "", val = "";
+		while(accesses > 0){
+			socket = new Socket(serverAddress, Integer.parseInt(portNumber));
+	        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+	        out = new PrintWriter(socket.getOutputStream(), true);
+	        
+			if(type.equals("reader")){
+        		if(header){
+        			log("log"+(Integer.parseInt(id)-1)+".txt","rSeq sSeq oVal\n", true);
+        			header = false;
+        		}
+        		out.println(type+" "+id+" ");
+        	}
+        	else{
+        		if(header){
+        			log("log"+(Integer.parseInt(id)-1)+".txt","rSeq sSeq\n", true);
+        			header = false;
+        		}
+        		out.println(type+" "+id+" "+id);
+        	}	
+        	String response;
+        	try {
+        			
+        		rSeq = in.readLine();
+        		sSeq = in.readLine();
+        		val = in.readLine();
+        		if(type.equals("reader"))
+        			log("log"+(Integer.parseInt(id)-1)+".txt",rSeq+"    "+sSeq+"    "+val+"\n", true);
+        		else
+        			log("log"+(Integer.parseInt(id)-1)+".txt",rSeq+"    "+sSeq+"    "+"\n", true);
+        	} catch (IOException ex) {
+        		response = "Error: " + ex;
+        	}
+        	//client simmulate real time of operations
+        	int random = (int)(Math.random() * ((10000)+1));
+    		Thread.sleep(random);
+        	accesses--;
+		}
+        socket.close();
         
         
-        
+    }
+    
+    private  void log(String fileName, String text, boolean append) {
+		BufferedWriter readWriter = null;
+		BufferedWriter writeWriter = null;
+			
+		try {
+			if(readWriter == null && type.equals("reader"))
+				readWriter = new BufferedWriter(new FileWriter(fileName, append));
+			if(writeWriter == null && type.equals("writer"))
+				writeWriter = new BufferedWriter(new FileWriter(fileName, append));
+			
+			if(type.equals("writer")){
+				writeWriter.write(text);
+				writeWriter.close();
+			}
+			else if(type.equals("reader")){
+				readWriter.write(text);
+				readWriter.close();
+				
+			}
+					
+		} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		}
     }
 
     /**
@@ -78,6 +115,7 @@ public class Client {
     
     public static void main(String[] args) throws Exception {
         try{
+        	System.out.println("client args length:"+ args.length);
         	Client client = new Client(args[0], args[1], args[2], args[3], Integer.parseInt(args[4]));
         	client.connectToServer();
         }
