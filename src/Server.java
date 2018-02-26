@@ -15,6 +15,11 @@ public class Server {
 	private static int rNum = 0;
 	private static int rSeq = 0;
 	private static int sSeq = 0;
+	private static boolean criticalSection1 = false;
+	private static boolean criticalSection2 = false;
+	private static boolean criticalSection3 = false;
+	private static boolean criticalSection4 = false;
+	private static boolean criticalSection5 = false;
 	
     public static void main(String[] args) throws Exception {
         System.out.println("The server is running.");
@@ -38,8 +43,6 @@ public class Server {
         	
          	while (true) {
             	Socket socket = listener.accept();
-            	//
-            	
                 new Handler(socket, clientNumber++).start();
             }
         } finally {
@@ -92,9 +95,13 @@ public class Server {
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                 String input = in.readLine();
                 
-                //ccccccccccccccccccccccccccccccccccccccc
-                rSeq++;
-                out.println(""+rSeq);
+                //critical section for global variable rSeq
+                while(criticalSection1)
+                	Thread.sleep(1000);
+                criticalSection1 = true;
+                out.println(""+(rSeq++));
+                criticalSection1 = false;
+                
                 //wait random time 1 ---> 10,000
                 int random = (int)(Math.random() * ((10000)+1));
         		Thread.sleep(random);
@@ -103,8 +110,13 @@ public class Server {
                 if(arr[0].equals("reader")){
                 	//write in reader log file
                 	try{
+                        //critical section for global variable rNum
+                		while(criticalSection2)
+                			Thread.sleep(1000);
+                		criticalSection2 = true;
                 		rNum++;
                 		log("readers.txt", " "+sSeq+"   "+val+"   "+arr[1]+"   "+rNum+"\n", true);
+                		criticalSection2 = false;
                 	}catch(Exception e){
                 		System.out.println("invalid write request");
                 	}	
@@ -114,17 +126,24 @@ public class Server {
                 	//write in writer log file
                 	
                 	try{
-                		//critical section
+                        //critical section for global variable val
+                		while(criticalSection3)
+                			Thread.sleep(1000);
+                		criticalSection3 = true;
                 		val = arr[2];
                 		log("writers.txt", " "+sSeq+"   "+arr[1]+"   "+arr[1]+"\n", true);
+                		criticalSection3 = false;
                 	}catch(Exception e){
                 		System.out.println("invalid write request");
                 	}		
                 }
                 
-                //sending sSeq
-           
+                //critical section for global variable sSeq
+                while(criticalSection4)
+                	Thread.sleep(1000);
+                criticalSection4 = true;
                 sSeq++;
+                criticalSection4 = false;
                 out.println(""+sSeq);
                 out.println(val);
                 
@@ -135,10 +154,15 @@ public class Server {
                 try {
                 	
                 	if(arr[0].equals("reader")){
+                        //critical section for global variable rSeq
+                		while(criticalSection5)
+                			Thread.sleep(1000);
+                		criticalSection5 = true;
                 		rNum--;
+                		criticalSection5 = false;
                 	}
                     socket.close();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     System.out.println("Couldn't close a socket, what's going on?");
                 }
                 System.out.println("Connection with client# " + clientNumber + " closed");
